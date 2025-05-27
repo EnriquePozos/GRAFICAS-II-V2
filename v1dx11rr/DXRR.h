@@ -31,6 +31,7 @@ public:
 
 	XACTINDEX cueIndex; // Ya la tienes, puedes renombrarla o usarla si es genérica
 	XACTINDEX cuePlayerDamage; // Nueva variable para el sonido de daño
+	XACTINDEX cueAmbience; 
 	CXACT3Util m_XACT3;
 
 
@@ -168,6 +169,8 @@ public:
 		skydome = new SkyDome(32, 32, 100.0f, &d3dDevice, &d3dContext, L"cielo.jpg", L"cielo_atardecer.jpg", L"cielo_noche.jpg");
 
 
+
+		//SONIDO DAÑO
 		// Inicializar XACT3 y cargar bancos
 		if (!m_XACT3.Initialize()) { // CXACT3Util::Initialize() ya llama a XACT3CreateEngine y Initialize
 			MessageBox(hWnd, L"Error al inicializar el motor XACT3.", L"Error de Audio", MB_OK | MB_ICONERROR);
@@ -192,6 +195,35 @@ public:
 		else {
 			cuePlayerDamage = XACTINDEX_INVALID; // Marcar como inválido si no se cargó el sound bank
 		}
+
+
+		//SONIDO AMBIENTE
+		if (m_XACT3.m_pSoundBank) {
+			cuePlayerDamage = m_XACT3.m_pSoundBank->GetCueIndex("roblox");
+			if (cuePlayerDamage == XACTINDEX_INVALID) {
+				// ... (manejo de error) ...
+			}
+
+			// Obtener el índice del Cue ambiental
+			cueAmbience = m_XACT3.m_pSoundBank->GetCueIndex("Desierto"); // << Usa el nombre exacto de tu Cue
+			if (cueAmbience == XACTINDEX_INVALID) {
+				MessageBox(hWnd, L"No se encontró el Cue 'AmbienceLoopCue'.", L"Error de Audio", MB_OK | MB_ICONWARNING);
+			}
+		}
+		else {
+			cuePlayerDamage = XACTINDEX_INVALID;
+			cueAmbience = XACTINDEX_INVALID; // Marcar como inválido también
+		}
+
+
+		// Iniciar el sonido ambiental una vez que todo esté cargado
+		if (m_XACT3.m_pSoundBank && cueAmbience != XACTINDEX_INVALID) {
+			m_XACT3.m_pSoundBank->Play(cueAmbience, 0, 0, NULL);
+			// Para un sonido ambiental en bucle, esto es usualmente suficiente.
+			// XACT3 manejará el bucle automáticamente si está configurado en el Cue/Wave.
+		}
+
+
 
     //COLLISIONS
 
