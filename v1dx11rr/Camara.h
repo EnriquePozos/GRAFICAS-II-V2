@@ -29,6 +29,7 @@ public:
 	D3DXMATRIX proyeccion;
 	int ancho;
 	int alto;
+	float point[3];
 	HitboxSystem* hitboxSystem;
 
 	Camara(D3DXVECTOR3 eye, D3DXVECTOR3 target, D3DXVECTOR3 up, int Ancho, int Alto, HitboxSystem* system)
@@ -59,6 +60,16 @@ public:
 		D3DXVec3Cross(&refRight, &refFront, &refUp);
 		D3DXVec3Normalize(&refRight, &refRight);
 		
+		point[0] = posCam.x;
+		point[1] = posCam.z;
+		point[2] = posCam.y;
+		
+	}
+
+	//funcion que devuelve el punto de la camara
+	float* GetPoint()
+	{
+		return point;
 	}
 
 	D3DXMATRIX UpdateCam(float vel, float arriaba, float izqder, float movement)
@@ -113,6 +124,11 @@ public:
 		hdveo = posCam + refFront;
 		D3DXMatrixLookAtLH(&vista, &posCam, &hdveo, &refUp);
 		D3DXMatrixTranspose( &vista, &vista );
+
+		point[0] = posCam.x;
+		point[1] = posCam.z;
+		point[2] = posCam.y;
+
 		return vista;
 	}
 	~Camara()

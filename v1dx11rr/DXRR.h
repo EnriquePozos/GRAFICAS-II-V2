@@ -96,7 +96,22 @@ public:
 	XMFLOAT3 lightDirection;
 	XMFLOAT3 lightColor;
 	float Lightrota;
+
+	//Booleans para jugabilidad
+	bool moneda0Agarrada = false;
+	bool moneda1Agarrada = false;
+	bool moneda2Agarrada = false;
+	bool moneda3Agarrada = false;
+	bool cristalAgarrado = false;
+	int score = 0;
+
+	bool score0Aumentado = false;
+	bool score1Aumentado = false;
+	bool score2Aumentado = false;
+	bool score3Aumentado = false;
+
 	
+
     DXRR(HWND hWnd, int Ancho, int Alto)
 	{
 		breakpoint = false;
@@ -161,6 +176,8 @@ public:
     	//Gazoline
     	hitboxSystem->RegisterHitbox(Box::FromCoords(80.18f, 3, -61.64f, 73.29f, 15, -67.93f));
 
+		
+
 
     	
 		//billboard = new BillboardRR(L"Assets/Billboards/fuego-anim.png",L"Assets/Billboards/fuego-anim-normal.png", d3dDevice, d3dContext, 5);
@@ -177,10 +194,10 @@ public:
 		cristal = new ModeloRR(d3dDevice, d3dContext, "Assets/Cristal/Cristal.obj", L"Assets/Cristal/Cristal.png", L"Assets/NoSpecMap.jpg", 90, 70);
 		estacionGas = new ModeloRR(d3dDevice, d3dContext, "Assets/EstacionGas/EstacionGas.obj", L"Assets/EstacionGas/EstacionGas.bmp", L"Assets/NoSpecMap.jpg", 77, -84);
 		
-		moneda[0] = new ModeloRR(d3dDevice, d3dContext, "Assets/Moneda/Moneda.obj", L"Assets/Moneda/Moneda.png", L"Assets/NoSpecMap.jpg", 20, -98);
-		moneda[1] = new ModeloRR(d3dDevice, d3dContext, "Assets/Moneda/Moneda.obj", L"Assets/Moneda/Moneda.png", L"Assets/NoSpecMap.jpg", 56, 0);
-		moneda[2] = new ModeloRR(d3dDevice, d3dContext, "Assets/Moneda/Moneda.obj", L"Assets/Moneda/Moneda.png", L"Assets/NoSpecMap.jpg", -86, -58);
-		moneda[3] = new ModeloRR(d3dDevice, d3dContext, "Assets/Moneda/Moneda.obj", L"Assets/Moneda/Moneda.png", L"Assets/NoSpecMap.jpg", -15, 14);
+		moneda[0] = new ModeloRR(d3dDevice, d3dContext, "Assets/Moneda/Moneda1.obj", L"Assets/Moneda/Moneda.png", L"Assets/NoSpecMap.jpg", 20, -98);
+		moneda[1] = new ModeloRR(d3dDevice, d3dContext, "Assets/Moneda/Moneda1.obj", L"Assets/Moneda/Moneda.png", L"Assets/NoSpecMap.jpg", 56, 0);
+		moneda[2] = new ModeloRR(d3dDevice, d3dContext, "Assets/Moneda/Moneda1.obj", L"Assets/Moneda/Moneda.png", L"Assets/NoSpecMap.jpg", -86, -58);
+		moneda[3] = new ModeloRR(d3dDevice, d3dContext, "Assets/Moneda/Moneda1.obj", L"Assets/Moneda/Moneda.png", L"Assets/NoSpecMap.jpg", -15, 14);
 		
 		piedra = new ModeloRR(d3dDevice, d3dContext, "Assets/Piedra/Piedra.obj", L"Assets/Piedra/Piedra.bmp", L"Assets/NoSpecMap.jpg", 36,67);
 		pozo = new ModeloRR(d3dDevice, d3dContext, "Assets/Pozo/Pozo.obj", L"Assets/Pozo/Pozo.jpg", L"Assets/NoSpecMap.jpg", 65, 66);
@@ -195,6 +212,7 @@ public:
 			WS_CHILD | WS_VISIBLE | SS_LEFT,
 			10, 10, 500, 20,
 			hWnd, NULL, hInstance, NULL);
+
 		
 	}
 
@@ -481,7 +499,7 @@ public:
 			//-51, -78, 4, 5, uv1, uv2, uv3, uv4, frameBillboard);
 
     	// DEBUG HITBOX RENDERER
-    // hitboxRenderer->RenderAll(*hitboxSystem, camara->vista, camara->proyeccion);   	
+		//hitboxRenderer->RenderAll(*hitboxSystem, camara->vista, camara->proyeccion);   	
 
 		arbolito->Draw(camara->vista, camara->proyeccion, camara->posCam,
 			-30, -50, 3, 5, uvArbol1, uvArbol2, uvArbol3, uvArbol4, 0);
@@ -497,18 +515,13 @@ public:
 		//TurnOffAlphaBlending();
 		//model->Draw(camara->vista, camara->proyeccion, terreno->Superficie(100, 20), camara->posCam, 10.0f, 0, 'A', 1);
 
-    	
+		
     	
 		bodega->Draw(camara->vista, camara->proyeccion, terreno->Superficie(-65, -80), camara->posCam, 10.0f, 0, 'A', 1);
 		boteBasura->Draw(camara->vista, camara->proyeccion, terreno->Superficie(-50, 76), camara->posCam, 10.0f, 0, 'A', 1);
 		carroViejo->Draw(camara->vista, camara->proyeccion, terreno->Superficie(6, 50), camara->posCam, 10.0f, 0, 'A', 1);
 		cristal->Draw(camara->vista, camara->proyeccion, terreno->Superficie(90, 70), camara->posCam, 10.0f, 0, 'A', 1);
 		estacionGas->Draw(camara->vista, camara->proyeccion, terreno->Superficie(77, -84), camara->posCam, 10.0f, 0, 'A', 1);
-		
-		moneda[0]->Draw(camara->vista, camara->proyeccion, terreno->Superficie(20, -98), camara->posCam, 10.0f, 0, 'A', 1);
-		moneda[1]->Draw(camara->vista, camara->proyeccion, terreno->Superficie(56, 0), camara->posCam, 10.0f, 0, 'A', 1);
-		moneda[2]->Draw(camara->vista, camara->proyeccion, terreno->Superficie(-86, -58), camara->posCam, 10.0f, 0, 'A', 1);
-		moneda[3]->Draw(camara->vista, camara->proyeccion, terreno->Superficie(-15, 14), camara->posCam, 10.0f, 0, 'A', 1);
 		
 		piedra->Draw(camara->vista, camara->proyeccion, terreno->Superficie(36, 67), camara->posCam, 10.0f, 0, 'A', 1);
 		pozo->Draw(camara->vista, camara->proyeccion, terreno->Superficie(65, 66), camara->posCam, 10.0f, 0, 'A', 1);
@@ -517,7 +530,61 @@ public:
 		molino->Draw(camara->vista, camara->proyeccion, terreno->Superficie(36, -63), camara->posCam, 10.0f, 0, 'A', 1);
 		moto->Draw(camara->vista, camara->proyeccion, terreno->Superficie(-30, -43), camara->posCam, 10.0f, 0, 'A', 1);
 
-		
+    	//JUGABILIDAD
+		 //Moneda 0
+		if (!isPointInsideSphere(camara->GetPoint(), moneda[0]->getSphere(1)) && moneda0Agarrada == false) {
+			moneda[0]->Draw(camara->vista, camara->proyeccion, terreno->Superficie(20, -98), camara->posCam, 10.0f, 0, 'A', 1);
+			//camara->posCam = prevPos; 
+		}
+		else {
+			moneda0Agarrada = true;
+			if (!score0Aumentado) {
+				score0Aumentado = true;
+				score += 10;
+			}
+		}
+		//Moneda 1
+		if (!isPointInsideSphere(camara->GetPoint(), moneda[1]->getSphere(1)) && moneda1Agarrada == false) {
+			moneda[1]->Draw(camara->vista, camara->proyeccion, terreno->Superficie(56, 0), camara->posCam, 10.0f, 0, 'A', 1);
+			//camara->posCam = prevPos; 
+		}
+		else {
+			moneda1Agarrada = true;
+			if (!score1Aumentado) {
+				score1Aumentado = true;
+				score += 10;
+			}
+		}
+		//Moneda 2
+		if (!isPointInsideSphere(camara->GetPoint(), moneda[2]->getSphere(1)) && moneda2Agarrada == false) {
+			moneda[2]->Draw(camara->vista, camara->proyeccion, terreno->Superficie(-86, -58), camara->posCam, 10.0f, 0, 'A', 1);
+			//camara->posCam = prevPos; 
+		}
+		else {
+			moneda2Agarrada = true;
+			if (!score2Aumentado) {
+				score2Aumentado = true;
+				score += 10;
+			}
+		}
+		//Moneda 3
+		if (!isPointInsideSphere(camara->GetPoint(), moneda[3]->getSphere(1)) && moneda3Agarrada == false) {
+			moneda[3]->Draw(camara->vista, camara->proyeccion, terreno->Superficie(-15, 14), camara->posCam, 10.0f, 0, 'A', 1);
+			//camara->posCam = prevPos; 
+		}
+		else {
+			moneda3Agarrada = true;
+			if (!score3Aumentado) {
+				score3Aumentado = true;
+				score += 10;
+			}
+		}
+
+		if (score == 40) {
+			MessageBox(hWnd, L"Felicidades, has recolectado todas las monedas!", L"Juego Terminado", MB_OK);
+			PostQuitMessage(0);
+		}
+
     	
 		std::wstringstream ss;
 		ss << L"Posici�n de la c�mara: X=" << camara->posCam.x << L", Y=" << camara->posCam.y << L", Z=" << camara->posCam.z;
