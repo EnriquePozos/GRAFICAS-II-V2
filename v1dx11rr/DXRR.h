@@ -28,6 +28,12 @@ private:
 	float gameTime = 0.0f;
 	float cycleDuration = 2.0f * 60.0f; // duracion ciclo
 public:	
+
+	XACTINDEX cueIndex; // Ya la tienes, puedes renombrarla o usarla si es genérica
+	XACTINDEX cuePlayerDamage; // Nueva variable para el sonido de daño
+	CXACT3Util m_XACT3;
+
+
 	HINSTANCE hInstance;
 	HWND hWnd;
 	HWND hCameraPosLabel;
@@ -95,8 +101,7 @@ public:
 	vector2 uvArbol3[4];
 	vector2 uvArbol4[4];
 
-	XACTINDEX cueIndex;
-	CXACT3Util m_XACT3;
+
 
 	XMFLOAT3 lightDirection;
 	XMFLOAT3 lightColor;
@@ -117,7 +122,19 @@ public:
 
 	bool jugadorEnMoto = false;
 
-	
+	int vida = 3;
+
+	bool colisionGolem1 = false;
+	bool colisionGolem2 = false;
+	bool colisionGolem3 = false;
+
+	bool restarVida1 = false;
+	bool restarVida2 = false;
+	bool restarVida3 = false;
+
+	bool jugadorInvulnerable;
+	float tiempoFinInvulnerabilidad;
+	float duracionInvulnerabilidad;
 
     DXRR(HWND hWnd, int Ancho, int Alto)
 	{
@@ -149,6 +166,32 @@ public:
 		camara = new Camara(D3DXVECTOR3(0,80,6), D3DXVECTOR3(0,80,0), D3DXVECTOR3(0,.5f,0), Ancho, Alto, hitboxSystem);
 		terreno = new TerrenoRR(256, 256, d3dDevice, d3dContext);
 		skydome = new SkyDome(32, 32, 100.0f, &d3dDevice, &d3dContext, L"cielo.jpg", L"cielo_atardecer.jpg", L"cielo_noche.jpg");
+
+
+		// Inicializar XACT3 y cargar bancos
+		if (!m_XACT3.Initialize()) { // CXACT3Util::Initialize() ya llama a XACT3CreateEngine y Initialize
+			MessageBox(hWnd, L"Error al inicializar el motor XACT3.", L"Error de Audio", MB_OK | MB_ICONERROR);
+			// Considera manejar este error (ej. deshabilitar sonidos)
+		}
+
+		// Reemplaza con los nombres y rutas correctas de tus archivos de bancos
+		if (!m_XACT3.LoadWaveBank(L"Assets/Sonido/Win/GameSoundsWaveBank.xwb")) {
+			MessageBox(hWnd, L"No se pudo cargar el Wave Bank.", L"Error de Audio", MB_OK | MB_ICONERROR);
+		}
+		if (!m_XACT3.LoadSoundBank(L"Assets/Sonido/Win/GameSoundEffectsSoundBank.xsb")) {
+			MessageBox(hWnd, L"No se pudo cargar el Sound Bank.", L"Error de Audio", MB_OK | MB_ICONERROR);
+		}
+
+		// Obtener el índice del Cue para el sonido de daño
+		if (m_XACT3.m_pSoundBank) { // m_pSoundBank es un miembro público en tu CXACT3Util
+			cuePlayerDamage = m_XACT3.m_pSoundBank->GetCueIndex("roblox"); // Usa el nombre exacto del Cue que creaste en XACT3
+			if (cuePlayerDamage == XACTINDEX_INVALID) {
+				MessageBox(hWnd, L"No se encontró el Cue 'PlayerDamageCue'.", L"Error de Audio", MB_OK | MB_ICONWARNING);
+			}
+		}
+		else {
+			cuePlayerDamage = XACTINDEX_INVALID; // Marcar como inválido si no se cargó el sound bank
+		}
 
     //COLLISIONS
 
@@ -228,7 +271,7 @@ public:
 			30.0f, 30.0f, // Posición inicial del enemigo
 			camara, terreno,
 			0.5f,  // Altura de la base de la moto sobre el terreno
-			0.0025f,  // Velocidad de movimiento
+			0.05f,  // Velocidad de movimiento
 			D3DX_PI * 0.8f, // Velocidad de rotación
 			40.0f  // Rango de persecución
 		);
@@ -239,6 +282,20 @@ public:
 			WS_CHILD | WS_VISIBLE | SS_LEFT,
 			10, 10, 500, 20,
 			hWnd, NULL, hInstance, NULL);
+
+
+		vida = 3;
+		colisionGolem1 = false; // Aunque estas podrían no ser necesarias con el nuevo enfoque
+		colisionGolem2 = false;
+		colisionGolem3 = false;
+		restarVida1 = false;
+		restarVida2 = false;
+		restarVida3 = false;
+
+		jugadorInvulnerable = false;
+		tiempoFinInvulnerabilidad = 0.0f;
+		duracionInvulnerabilidad = 1.5f;
+
 
 		
 	}
@@ -521,6 +578,8 @@ public:
 		water->Draw(camara->vista, camara->proyeccion, 90.0f, terreno->Superficie(25, -5) + 1, 10, 0.0005f, lightDirection, lightColor);
 		TurnOffAlphaBlending();
 
+		m_XACT3.DoWork();
+
 		//TurnOnAlphaBlending();
 		//billboard->Draw(camara->vista, camara->proyeccion, camara->posCam,
 			//-51, -78, 4, 5, uv1, uv2, uv3, uv4, frameBillboard);
@@ -557,7 +616,7 @@ public:
 
 		//Enemigo persigue al jugador
 		if (Golem) {
-			Golem->ActualizarIA(gameTime); // deltaTime es el tiempo transcurrido del frame
+			Golem->ActualizarIA(1); // deltaTime es el tiempo transcurrido del frame
 		}
     	
 		if (Golem) {
@@ -631,6 +690,75 @@ public:
 			}
 		}
 
+		if (vida > 0) { // Solo procesar si el jugador tiene vida
+			// Asumimos que tienes un puntero a tu enemigo/golem, ej. 'enemigoGolemMIA'
+			// y que tiene un método getSphere(radio). Ajusta el radio según sea necesario.
+			bool hayColisionConGolem = false;
+			if (Golem) { // Verifica que el puntero al golem es válido
+				// El radio de la esfera del golem (ej. 2.0f) debe ajustarse al tamaño de tu modelo
+				hayColisionConGolem = isPointInsideSphere(camara->GetPoint(), Golem->getSphere(2.0f));
+			}
+
+
+			// Manejar fin de invulnerabilidad
+			if (jugadorInvulnerable && gameTime >= tiempoFinInvulnerabilidad) {
+				jugadorInvulnerable = false;
+				OutputDebugString(L"Jugador ya no es invulnerable.\n");
+			}
+
+			// Si hay colisión Y el jugador NO es invulnerable
+			if (hayColisionConGolem && !jugadorInvulnerable) {
+				bool vidaPerdidaEsteFrame = false; // Para asegurar que el sonido solo suene una vez por "toque"
+				if (!restarVida1) {
+					vida--;
+					restarVida1 = true;
+					vidaPerdidaEsteFrame = true;
+					// ... (tu OutputDebugString) ...
+				}
+				else if (!restarVida2) {
+					vida--;
+					restarVida2 = true;
+					vidaPerdidaEsteFrame = true;
+					// ... (tu OutputDebugString) ...
+				}
+				else if (!restarVida3) {
+					vida--;
+					restarVida3 = true;
+					vidaPerdidaEsteFrame = true;
+					// ... (tu OutputDebugString) ...
+				}
+
+				if (vidaPerdidaEsteFrame) {
+					jugadorInvulnerable = true;
+					tiempoFinInvulnerabilidad = gameTime + duracionInvulnerabilidad;
+
+					// Reproducir el sonido de daño
+					if (m_XACT3.m_pSoundBank && cuePlayerDamage != XACTINDEX_INVALID) {
+						m_XACT3.m_pSoundBank->Play(cuePlayerDamage, 0, 0, NULL);
+					}
+				}
+			}
+		} // Fin de if (vida > 0)
+
+		// Comprobar Game Over
+		if (vida <= 0) {
+			// Evitar que se ejecute la lógica de Game Over múltiples veces
+			static bool gameOverProcesado = false;
+			if (!gameOverProcesado) {
+				OutputDebugString(L"GAME OVER\n");
+				MessageBox(hWnd, L"Has sido derrotado por el Golem.", L"Game Over", MB_OK | MB_ICONINFORMATION);
+				// Aquí podrías:
+				// - Mostrar un menú de Game Over.
+				// - Reiniciar el juego/nivel (restableciendo 'vida', 'restarVidaX', posición del jugador/golem, etc.).
+				// - Salir de la aplicación:
+				PostQuitMessage(0);
+				gameOverProcesado = true; // Marcar como procesado
+			}
+		}
+		
+		
+		
+		
 		if (score == 40) {
 			MessageBox(hWnd, L"Felicidades, has recolectado todas las monedas!", L"Juego Terminado", MB_OK);
 			PostQuitMessage(0);
@@ -638,7 +766,7 @@ public:
 
     	
 		std::wstringstream ss;
-		ss << L"Posici�n de la c�mara: X=" << camara->posCam.x << L", Y=" << camara->posCam.y << L", Z=" << camara->posCam.z;
+		ss << L"Posici�n de la c�mara: X=" << camara->posCam.x << L", Y=" << camara->posCam.y << L", Z=" << camara->posCam.z << " Vida = " << vida;
 		SetWindowText(hCameraPosLabel, ss.str().c_str());
 
 		swapChain->Present( 1, 0 );
