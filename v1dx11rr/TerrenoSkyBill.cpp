@@ -277,6 +277,32 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
                 return 0;
             }
 
+            if (keyboardData[DIK_E] & 0x80) { // Si se presiona 'E'
+                if (!dxrr->jugadorEnMoto && dxrr->moto) { // Si el jugador NO está en la moto y la moto existe
+                    // Comprobar si la cámara está cerca de la moto
+                    if (dxrr->isPointInsideSphere(dxrr->camara->GetPoint(), dxrr->moto->getSphere(3.0f))) { // Radio de interacción de 3.0f (ajusta según necesites)
+                        dxrr->jugadorEnMoto = true;
+                        // Opcional: podrías querer "teletransportar" ligeramente la cámara o la moto
+                        // para un mejor alineamiento visual inicial, o ajustar un offset en la clase Vehiculo.
+                        // Por ahora, simplemente activamos el estado.
+                    }
+                }
+            }
+
+            // Lógica para BAJAR de la moto con la tecla 'Q'
+            if (keyboardData[DIK_Q] & 0x80) { // Si se presiona 'Q'
+                if (dxrr->jugadorEnMoto && dxrr->moto) { // Si el jugador SÍ está en la moto
+                    dxrr->jugadorEnMoto = false;
+                    // Opcional: Al bajarse, podrías querer reposicionar la cámara ligeramente
+                    // al lado de la moto para que no aparezca dentro de ella.
+                    // Por ejemplo:
+                    // D3DXVECTOR3 posMoto = dxrr->moto->GetPosicionActual(); // Asumiendo que tu Vehiculo tiene GetPosicionActual()
+                    // D3DXVECTOR3 dirFrontalMoto = dxrr->moto->GetDireccionFrontal(); // Asumiendo GetDireccionFrontal()
+                    // dxrr->camara->posCam = posMoto - (dirFrontalMoto * 1.0f) + D3DXVECTOR3(-1.5f, dxrr->camara->posCam.y - posMoto.y + 0.5f, 0.0f); // Posicionar a un lado
+                    // dxrr->camara->posCam.y = dxrr->terreno->Superficie(dxrr->camara->posCam.x, dxrr->camara->posCam.z) + altura_camara_normal;
+                }
+            }
+
 
 
 

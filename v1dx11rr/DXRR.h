@@ -13,6 +13,7 @@
 #include "XACT3Util.h"
 #include "Water.h"
 #include "Enemigo.h"
+#include "Vehiculo.h"
 
 #include <sstream>
 #include <windows.h>
@@ -71,7 +72,10 @@ public:
 	ModeloRR*   torreAgua;
 	ModeloRR* garage;
 	ModeloRR* molino;
-	Enemigo* moto;
+	Vehiculo* moto;
+
+	Enemigo* Golem;
+
 
 	HitboxSystem* hitboxSystem;
 	HitboxRenderer* hitboxRenderer;
@@ -110,6 +114,8 @@ public:
 	bool score1Aumentado = false;
 	bool score2Aumentado = false;
 	bool score3Aumentado = false;
+
+	bool jugadorEnMoto = false;
 
 	
 
@@ -205,10 +211,20 @@ public:
 		torreAgua = new ModeloRR(d3dDevice, d3dContext, "Assets/TorreAgua/TorreAgua.obj", L"Assets/TorreAgua/TorreAgua.bmp", L"Assets/NoSpecMap.jpg", -75, 60);
 		garage = new ModeloRR(d3dDevice, d3dContext, "Assets/garage/garage.obj", L"Assets/garage/garage.png", L"Assets/NoSpecMap.jpg", -30, -35);
 		molino = new ModeloRR(d3dDevice, d3dContext, "Assets/molino/molino.obj", L"Assets/molino/molino.png", L"Assets/NoSpecMap.jpg", 36, -63);
+
+		D3DXVECTOR3 offsetVehiculo(0.0f, -0.8f, 0.5f); // Ejemplo: un poco abajo y ligeramente delante de la cámara
+		moto = new Vehiculo(d3dDevice, d3dContext,
+			"Assets/moto/moto.obj", // Ruta a tu modelo de vehículo
+			L"Assets/moto/moto.png", // Textura
+			L"Assets/NoSpecMap.jpg", // Specular
+			camara, // Pasa la cámara del jugador
+			offsetVehiculo,
+			terreno, // Pasa el terreno si quieres ajuste de altura
+			0.3f // Altura de la base del vehículo sobre el terreno
+		);
 		
-		
-		moto = new Enemigo(d3dDevice, d3dContext,
-			"Assets/moto/moto.obj", L"Assets/moto/moto.png", L"Assets/NoSpecMap.jpg",
+		Golem = new Enemigo(d3dDevice, d3dContext,
+			"Assets/Golem/Golem.obj", L"Assets/Golem/GolemTextura.bmp", L"Assets/NoSpecMap.jpg",
 			30.0f, 30.0f, // Posición inicial del enemigo
 			camara, terreno,
 			0.5f,  // Altura de la base de la moto sobre el terreno
@@ -526,12 +542,26 @@ public:
 		//TurnOffAlphaBlending();
 		//model->Draw(camara->vista, camara->proyeccion, terreno->Superficie(100, 20), camara->posCam, 10.0f, 0, 'A', 1);
 
-		if (moto) {
-			moto->ActualizarIA(gameTime); // deltaTime es el tiempo transcurrido del frame
+
+		//Conducción
+		if (moto) { // Primero, asegurarse de que el objeto moto existe
+			if (jugadorEnMoto) {
+				// Si el jugador está en la moto, la moto se adhiere a la cámara.
+				moto->ActualizarTransformacionConCamara();
+			}
+			else {
+
+			}
+			moto->Dibujar(camara->vista, camara->proyeccion);
+		}
+
+		//Enemigo persigue al jugador
+		if (Golem) {
+			Golem->ActualizarIA(gameTime); // deltaTime es el tiempo transcurrido del frame
 		}
     	
-		if (moto) {
-			moto->Dibujar(camara->vista, camara->proyeccion, camara->posCam);
+		if (Golem) {
+			Golem->Dibujar(camara->vista, camara->proyeccion, camara->posCam);
 		}
 		
 		
@@ -546,9 +576,9 @@ public:
 		torreAgua->Draw(camara->vista, camara->proyeccion, terreno->Superficie(-54, -18), camara->posCam, 10.0f, 0, 'A', 1);
 		garage->Draw(camara->vista, camara->proyeccion, terreno->Superficie(-30, -35), camara->posCam, 10.0f, 0, 'A', 1);
 		molino->Draw(camara->vista, camara->proyeccion, terreno->Superficie(36, -63), camara->posCam, 10.0f, 0, 'A', 1);
-		
-		
 		//moto->Draw(camara->vista, camara->proyeccion, terreno->Superficie(-30, -43), camara->posCam, 10.0f, 0, 'A', 1);
+		
+		
 
     	//JUGABILIDAD
 		

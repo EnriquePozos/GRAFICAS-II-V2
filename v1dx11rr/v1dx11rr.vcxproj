@@ -169,6 +169,7 @@
     <ClInclude Include="ModeloRR.h" />
     <ClInclude Include="SkyDome.h" />
     <ClInclude Include="TerrenoRR.h" />
+    <ClInclude Include="Vehiculo.h" />
     <ClInclude Include="Water.h" />
     <ClInclude Include="XACT3Util.h" />
   </ItemGroup>
