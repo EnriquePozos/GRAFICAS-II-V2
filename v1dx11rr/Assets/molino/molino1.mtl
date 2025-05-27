@@ -1,0 +1,13 @@
+# Blender 4.0.2 MTL File: 'terreno.blend'
+# www.blender.org
+
+newmtl Windmill_MAT
+Ns 200.000000
+Ka 1.000000 1.000000 1.000000
+Ks 1.000000 1.000000 1.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 3
+map_Kd C:/Windmill_Windmill_MAT_BaseColor.png
+map_Bump -bm 1.000000 C:/Windmill_Windmill_MAT_Normal.png
