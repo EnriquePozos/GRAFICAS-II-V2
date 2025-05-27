@@ -16,6 +16,10 @@
 using namespace std;
 
 class ModeloRR {
+protected:
+	float posX;
+	float posZ;
+
 private:
 	struct VertexComponent
 	{
@@ -69,10 +73,7 @@ private:
 
 	CObjParser m_ObjParser;
 	
-	float posX;
-	float posZ;
 	float sphere[3];
-
 
 public:
 	ModeloRR(ID3D11Device* D3DDevice, ID3D11DeviceContext* D3DContext, char* ModelPath, WCHAR* colorTexturePath, WCHAR* specularTexturePath, float _posX, float _posZ)
@@ -355,6 +356,7 @@ public:
 		worldCB = 0;
 		cameraPosCB = 0;
 		specForceCB = 0;
+		return true;
 	}
 
 	void Update(float dt)

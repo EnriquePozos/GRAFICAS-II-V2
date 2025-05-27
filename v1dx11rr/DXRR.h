@@ -12,6 +12,7 @@
 #include "ModeloRR.h"
 #include "XACT3Util.h"
 #include "Water.h"
+#include "Enemigo.h"
 
 #include <sstream>
 #include <windows.h>
@@ -70,7 +71,7 @@ public:
 	ModeloRR*   torreAgua;
 	ModeloRR* garage;
 	ModeloRR* molino;
-	ModeloRR* moto;
+	Enemigo* moto;
 
 	HitboxSystem* hitboxSystem;
 	HitboxRenderer* hitboxRenderer;
@@ -204,7 +205,17 @@ public:
 		torreAgua = new ModeloRR(d3dDevice, d3dContext, "Assets/TorreAgua/TorreAgua.obj", L"Assets/TorreAgua/TorreAgua.bmp", L"Assets/NoSpecMap.jpg", -75, 60);
 		garage = new ModeloRR(d3dDevice, d3dContext, "Assets/garage/garage.obj", L"Assets/garage/garage.png", L"Assets/NoSpecMap.jpg", -30, -35);
 		molino = new ModeloRR(d3dDevice, d3dContext, "Assets/molino/molino.obj", L"Assets/molino/molino.png", L"Assets/NoSpecMap.jpg", 36, -63);
-		moto = new ModeloRR(d3dDevice, d3dContext, "Assets/moto/moto.obj", L"Assets/moto/moto.png", L"Assets/NoSpecMap.jpg", -30, -43);
+		
+		
+		moto = new Enemigo(d3dDevice, d3dContext,
+			"Assets/moto/moto.obj", L"Assets/moto/moto.png", L"Assets/NoSpecMap.jpg",
+			30.0f, 30.0f, // Posición inicial del enemigo
+			camara, terreno,
+			0.5f,  // Altura de la base de la moto sobre el terreno
+			0.0025f,  // Velocidad de movimiento
+			D3DX_PI * 0.8f, // Velocidad de rotación
+			40.0f  // Rango de persecución
+		);
 
 		water = new WaterRR(2000, 2000, d3dDevice, d3dContext, L"Assets/water.png", L"Assets/water.png");
 
@@ -515,8 +526,15 @@ public:
 		//TurnOffAlphaBlending();
 		//model->Draw(camara->vista, camara->proyeccion, terreno->Superficie(100, 20), camara->posCam, 10.0f, 0, 'A', 1);
 
-		
+		if (moto) {
+			moto->ActualizarIA(gameTime); // deltaTime es el tiempo transcurrido del frame
+		}
     	
+		if (moto) {
+			moto->Dibujar(camara->vista, camara->proyeccion, camara->posCam);
+		}
+		
+		
 		bodega->Draw(camara->vista, camara->proyeccion, terreno->Superficie(-65, -80), camara->posCam, 10.0f, 0, 'A', 1);
 		boteBasura->Draw(camara->vista, camara->proyeccion, terreno->Superficie(-50, 76), camara->posCam, 10.0f, 0, 'A', 1);
 		carroViejo->Draw(camara->vista, camara->proyeccion, terreno->Superficie(6, 50), camara->posCam, 10.0f, 0, 'A', 1);
@@ -528,10 +546,13 @@ public:
 		torreAgua->Draw(camara->vista, camara->proyeccion, terreno->Superficie(-54, -18), camara->posCam, 10.0f, 0, 'A', 1);
 		garage->Draw(camara->vista, camara->proyeccion, terreno->Superficie(-30, -35), camara->posCam, 10.0f, 0, 'A', 1);
 		molino->Draw(camara->vista, camara->proyeccion, terreno->Superficie(36, -63), camara->posCam, 10.0f, 0, 'A', 1);
-		moto->Draw(camara->vista, camara->proyeccion, terreno->Superficie(-30, -43), camara->posCam, 10.0f, 0, 'A', 1);
+		
+		
+		//moto->Draw(camara->vista, camara->proyeccion, terreno->Superficie(-30, -43), camara->posCam, 10.0f, 0, 'A', 1);
 
     	//JUGABILIDAD
-		 //Moneda 0
+		
+		//Moneda 0
 		if (!isPointInsideSphere(camara->GetPoint(), moneda[0]->getSphere(1)) && moneda0Agarrada == false) {
 			moneda[0]->Draw(camara->vista, camara->proyeccion, terreno->Superficie(20, -98), camara->posCam, 10.0f, 0, 'A', 1);
 			//camara->posCam = prevPos; 

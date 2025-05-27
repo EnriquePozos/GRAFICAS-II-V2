@@ -161,6 +161,7 @@
     <ClInclude Include="Billboard.h" />
     <ClInclude Include="Camara.h" />
     <ClInclude Include="DXRR.h" />
+    <ClInclude Include="Enemigo.h" />
     <ClInclude Include="GamePadRR.h" />
     <ClInclude Include="Box.h" />
     <ClInclude Include="HitboxSystem.h" />
